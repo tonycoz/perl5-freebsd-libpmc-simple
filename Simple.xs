@@ -20,7 +20,21 @@ typedef libpmc_simple *FreeBSD__libpmc__Simple;
 static HV *
 lps_results(libpmc_simple *obj) {
   dTHX;
+
+  int count;
+  const libpmc_simple_result_t *results = lps_result_array(obj, &count);
+  if (!results) {
+    Perl_croak(aTHX_ "Failed to read results");
+  }
+  
   HV *r = newHV();
+
+  for (int i = 0; i < count; ++i) {
+    HV *entry = newHV();
+    SV *entry_rv = newRV_noinc((SV*)entry);
+    hv_stores(entry, "val", newSVnum(results[i].count));
+    hv_store(r, results[i].name, strlen(results[i].name), entry_rv, 0);
+  }
 
   return r;
 }
